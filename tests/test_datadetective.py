@@ -79,3 +79,16 @@ def test_report_html_contains_expected_sections(tmp_path):
         assert section in html, f"missing section: {section}"
     assert "data:image/png;base64" in html  # inline chart images
     assert "Histogram" in html
+
+
+def test_all_missing_numeric_column_skipped_in_numeric_summary():
+    csv = os.path.join(FIXTURE_DIR, "allmissing.csv")
+    pd.DataFrame({"a": [1, 2, 3], "b": [float("nan")] * 3}).to_csv(csv, index=False)
+    p = profile_csv(csv)
+    assert p["missing_pct"]["b"] == 100.0
+    assert "b" not in p["numeric_summary"]
+    import math
+
+    for stats in p["numeric_summary"].values():
+        for v in stats.values():
+            assert not (isinstance(v, float) and math.isnan(v))

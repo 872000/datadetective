@@ -30,6 +30,10 @@ def profile_csv(path: str) -> dict:
     numeric_summary = {}
     for col in numeric.columns:
         desc = numeric[col].describe()
+        if desc["count"] == 0:
+            # All values missing: no distribution to summarise (and the
+            # NaN stats would break JSON serialisation downstream).
+            continue
         numeric_summary[col] = {
             "count": int(desc["count"]),
             "mean": round(float(desc["mean"]), 4),
